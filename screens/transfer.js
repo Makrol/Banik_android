@@ -30,7 +30,7 @@ export default function Transfer({ navigation }){
                                     </TouchableOpacity>
                                     
                                     <HStack space={20}>
-                                        <TouchableOpacity >
+                                        <TouchableOpacity onPress={() =>navigation.navigate("ScanQr")}>
                                             <View style={styles.button}>
                                                 <Image
                                                     source={require('../assets/scan.png')}

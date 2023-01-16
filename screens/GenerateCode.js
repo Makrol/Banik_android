@@ -2,10 +2,46 @@
 import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Image} from 'react-native';
 import {NativeBaseProvider,HStack,VStack, ScrollView,Input,Center,Button,Icon} from "native-base";
 import { Ionicons } from "@expo/vector-icons";
-
-
-
+import QRCode from 'react-native-qrcode-svg'
+import {useEffect,useState} from "react";
+import{onAuthStateChanged} from "firebase/auth";
+import {auth} from "../firebase.js";
+import {db} from "../firebase.js";
+import {doc,getDoc,query,collection,where,getDocs} from "firebase/firestore";
 export default function GenerateCode({ navigation }){
+  
+
+  const [email,setEmail] = useState("");
+  const [name,setName] = useState("");
+  const [accountNum,setAccountNum] = useState("");
+  const [jsonOut,setJsonOut] = useState('{"name": "", "accountNumber": ""}');
+  onAuthStateChanged(auth, (user) => {
+    
+    if (user) 
+    {
+      setEmail(user.email);
+    } 
+    else {
+      // User is signed out
+      // ...
+    }  
+
+  })
+    
+    useEffect(()=>{
+      if(email!="")
+      {
+        getDoc(doc(db, "users",email)).then(user=>{
+          const q = query(collection(db,"accounts"),where("owner","==",user.data().accountNumber));
+          getDocs(q).then(querySnapshot=>{
+            if(!querySnapshot.empty)
+              setJsonOut('{"name": "'+user.data().name+" "+user.data().surname+'", "accountNumber": "'+querySnapshot.docs[0].id+'"}')
+            
+          }); 
+      })
+      }
+     
+    },[email])
     return (
             
             <View style={styles.container}>
@@ -26,10 +62,10 @@ export default function GenerateCode({ navigation }){
                             <ScrollView>
                             <View>
                             <Center>
-                                <Image
-                                    source={require('../assets/qrCode.png')}
-                                    style={styles.qr}>
-                                </Image>
+                               
+                                <QRCode size={200}
+                                  value= {jsonOut}
+                                />
                             </Center>
                             </View>
                             </ScrollView>

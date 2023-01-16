@@ -15,6 +15,7 @@ import GenerateCode from './screens/GenerateCode';
 import History from './screens/History';
 import TransferDetails from './screens/TransferDetails';
 import RegisterUser from './screens/registerUser';
+import ScanScreen from './screens/ScanQr';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import 'react-native-gesture-handler';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -178,6 +179,7 @@ export default function App() {
             <Stack.Screen name="GenerateCode" component={GenerateCode}/>
             <Stack.Screen name="TransferDetails" component={TransferDetails}/>
             <Stack.Screen name="registerUser" component={RegisterUser}/>
+            <Stack.Screen name="ScanQr" component={ScanScreen}/>
           </Stack.Navigator>
         </NavigationContainer>
       );

@@ -12,7 +12,24 @@ import { set } from 'react-native-reanimated';
 
 
 
-export default function TransferForm({ navigation }){
+export default function TransferForm({route,navigation }){
+
+  const [scanData,setScanData] = useState('{"name": "", "accountNumber": ""}');
+  const [data,setData] = useState();
+  useEffect(()=>{
+    if(route.params==null)
+    {
+      
+    }
+    else{
+      setScanData(route.params.data);
+      setData(JSON.parse(route.params.data));
+      
+    }
+    },[])
+  
+
+
 
   const [userData,setUserData] = useState(-1);
   const [accountList,setAccountList] = useState([]);
@@ -42,7 +59,9 @@ export default function TransferForm({ navigation }){
     }
   }
   onAuthStateChanged(auth, (user) => {
-    
+
+
+    console.log(data.accountNumber);
     if (user) 
     {
       const docRef = doc(db,"users",user.email).withConverter(userConverter);
