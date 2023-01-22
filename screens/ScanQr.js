@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Button ,Alert} from 'react-native';
 import React, { useEffect } from 'react';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
@@ -24,9 +24,26 @@ export default function ScanScreen({navigation}) {
 
   const handleBarCodeScanned = ({type, data}) => {
     setScanData(data);
-    console.log(`Data: ${data}`);
-    console.log(`Type: ${type}`);
-    navigation.navigate("TransferForm",{data});
+    //console.log(`Data: ${data}`);
+    //console.log(`Type: ${type}`);
+    
+    const pattern = /^\{"name": "([\w\s]+)", "accountNumber": "([\w\s]+)"\}$/;
+    if(pattern.test(data)==true)
+    {
+      navigation.navigate("TransferForm",{data});
+    }
+    else
+    {
+      Alert.alert(
+        'Skaner Qr',
+        'Niepoprawny kod QR',
+        [
+          {
+            text: 'Ok',
+          },
+        ],
+      );
+    }
   };
 
   return (

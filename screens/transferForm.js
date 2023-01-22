@@ -1,35 +1,24 @@
 
-import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Image} from 'react-native';
+import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Alert} from 'react-native';
 import {NativeBaseProvider,HStack,VStack, ScrollView,Input,Center,Button,Icon} from "native-base";
 import { Ionicons } from "@expo/vector-icons";
 import {useState,useEffect} from 'react';
 import { Select } from "native-base";
 import {auth} from "../firebase.js";
 import {db} from "../firebase.js";
-import { collection, doc,getDoc,query,where,getDocs, updateDoc,firestore  } from "firebase/firestore";
-import{getAuth, signInWithEmailAndPassword,onAuthStateChanged} from "firebase/auth";
-import { set } from 'react-native-reanimated';
+import { collection, doc,getDoc,query,where,getDocs, updateDoc,addDoc  } from "firebase/firestore";
+import{onAuthStateChanged} from "firebase/auth";
+
 
 
 
 export default function TransferForm({route,navigation }){
 
-  const [scanData,setScanData] = useState('{"name": "", "accountNumber": ""}');
-  const [data,setData] = useState();
-  useEffect(()=>{
-    if(route.params==null)
-    {
-      
-    }
-    else{
-      setScanData(route.params.data);
-      setData(JSON.parse(route.params.data));
-      
-    }
-    },[])
-  
+ 
 
-
+  //const test = JSON.parse(JSON.stringify(route.params.jsonOut));
+  const jsonData = JSON.parse(route.params.data);
+  console.log(jsonData);
 
   const [userData,setUserData] = useState(-1);
   const [accountList,setAccountList] = useState([]);
@@ -61,7 +50,7 @@ export default function TransferForm({route,navigation }){
   onAuthStateChanged(auth, (user) => {
 
 
-    console.log(data.accountNumber);
+    //console.log(data.accountNumber);
     if (user) 
     {
       const docRef = doc(db,"users",user.email).withConverter(userConverter);
@@ -95,60 +84,75 @@ export default function TransferForm({route,navigation }){
                 getDoc(doc(db, "accounts",accountNumber)).then(response=>{
                   if(response.data().money>transferAmount)
                   {
+                    
+                    
+                    //console.log("Document written with ID: ", docRef.id);
+                    
                     updateDoc(doc(db, "accounts", accountNumber),{
                       money: response.data().money-transferAmount,
                     })
-
+                    console.log(accountNumber);
                     getDoc(doc(db, "accounts",recipentAccountNumber)).then(recipentResponse=>{
-                      updateDoc(doc(db, "accounts", recipentAccountNumber),{
-                        money: parseInt(recipentResponse.data().money)+parseInt(transferAmount),
-                      })
+                      if(recipentResponse.exists())
+                      {
+                        updateDoc(doc(db, "accounts", recipentAccountNumber),{
+                          money: parseInt(recipentResponse.data().money)+parseInt(transferAmount),
+                        })
+                        const docRef = addDoc(collection(db, "transfers"), {
+                          amount: transferAmount,
+                          fromAccount: accountNumber,
+                          toAccount: recipentAccountNumber,
+                          toName: recipentName,
+                          operationDate: new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }),                       
+                          postingDate: new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }),
+                          type: "Przelew Krajowy",
+                          title: transferTitle
+                        });
+                        navigation.popToTop();
+                        navigation.replace('DrawerRoot');
+                      }
+                      else{
+                        Alert.alert(
+                          'Przelew',
+                          'Numer konta odbiorcy nie istnieje',
+                          [
+                            {
+                              text: 'Ok',
+                            },
+                          ],
+                        );
+                      }
+                     
+
                     })
                     
+                    
+                    
+
+                    
+                  }
+                  else{
+                    Alert.alert(
+                      'Przelew',
+                      'Za mało pieniędzy aby zrealizować przelew',
+                      [
+                        {
+                          text: 'Ok',
+                        },
+                      ],
+                    );
                   }
                 })
 
 
 
-                /*
-    console.log("dziala");
-    const q = query(collection(db,"accounts"),where("owner","==",userData));
-    getDocs(q).then(querySnapshot=>{
-        querySnapshot.forEach((doc) => {
-              if(doc.id==accountNumber)
-              {
-                console.log(doc.id);
-               
-                /*db.collection("accounts").doc("0000000000000001").update({
-                  money: 0
-                })
-                updateDoc(doc(db,"accounts","0000000000000001"),{
-                  name: "testtest",
-                }).then(()=>{
-                  console.log("ok");
-                }).catch((error)=>{
-                  console.log(error);
-                });;
-                
-                if(transferAmount<=doc.data().money)
-                {
-                 
-                  console.log(doc.data().money);
-                  
-                    
-                
-                }
-                
-              }
-        });
-        
-    });*/
   }
  
 //const[email,setEmail] = useState(" ");
+const[isDisabled,setIsDisabled] = useState("true");
 const[accountNumber,setAccountNumber] = useState("");
-const[recipentName,setRecipentName] = useState("");
-const[recipentAccountNumber,setRecipentAccountNumber] = useState("");
+const[recipentName,setRecipentName] = useState(jsonData.name);
+const[recipentAccountNumber,setRecipentAccountNumber] = useState(jsonData.accountNumber);
 const[transferAmount,setTransferAmount] = useState("");
 const[transferTitle,setTransferTitle] = useState("");
 

@@ -1,11 +1,12 @@
 
 import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Image} from 'react-native';
 import {NativeBaseProvider,HStack,Stack} from "native-base";
-
+import { useState } from 'react';
 
 
 
 export default function TransferTypes({ navigation }){
+  const [data,setData] = useState('{"name": "", "accountNumber": ""}');
     return (
             
             <View style={styles.container}>
@@ -21,7 +22,7 @@ export default function TransferTypes({ navigation }){
                                 
                                 
                                 <HStack space={20} style={styles.content}>
-                                    <TouchableOpacity onPress={() =>navigation.navigate("TransferForm")}>
+                                    <TouchableOpacity onPress={() =>navigation.navigate("TransferForm",{data})}>
                                         <View style={styles.button}>
                                             <Image
                                                 source={require('../assets/transfer.png')}

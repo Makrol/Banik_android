@@ -1,15 +1,73 @@
 
 import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Image,FlatList} from 'react-native';
 import {NativeBaseProvider,HStack,Stack} from "native-base";
-
-
-
+import {auth} from "../firebase.js";
+import {db} from "../firebase.js";
+import { collection, doc,getDoc,query,where,getDocs, updateDoc,addDoc  } from "firebase/firestore";
+import{onAuthStateChanged} from "firebase/auth";
+import {useState,useEffect} from 'react';
+import { Select } from "native-base";
+import { acc } from 'react-native-reanimated';
 
 
 
 export default function History({navigation}){
+
+  const[accountNumber,setAccountNumber] = useState("");
+  const [accountList,setAccountList] = useState([]);
+  const [userData,setUserData] = useState(-1);
+  const [tarnsferList,setTransferList] = useState([]);
+  onAuthStateChanged(auth, (user) => {
+    if (user) 
+    {
+      const docRef = doc(db,"users",user.email);
+      getDoc(docRef).then(docSnap=>{
+      if (docSnap.exists()) {
+          setUserData(docSnap.data().accountNumber); 
+      }
+      });  
+    } 
+    else {
+      // User is signed out
+    }  
+
+  });
+
+  useEffect(()=>{
+    if(userData != -1){
+      const q = query(collection(db,"accounts"),where("owner","==",userData));
+      getDocs(q).then(querySnapshot=>{
+        const tmpTab = [];
+        querySnapshot.forEach((doc) => {
+              tmpTab.push(doc.id); 
+        });
+        setAccountList(tmpTab);
+        console.log(tmpTab);
+    });
+    }
+  },[userData])
+
+  useEffect(()=>{
+      if(accountNumber!="")
+      {
+        const tmpTab=[];
+        const q = query(collection(db,"transfers"),where("fromAccount","==",accountNumber));
+        getDocs(q).then(querySnapshot=>{
+
+        querySnapshot.forEach((doc) => {
+
+              tmpTab.push({ key: doc.id, value: element(doc.data().title,doc.data().amount,doc.data().type) });
+        });
+        setTransferList(tmpTab);
+
+    });
+
+      }
+  },[accountNumber])
+
+
     const data = [
-        { key: "1", value: element() },
+       /* { key: "1", value: element() },
         { key: "2", value: element() },
         { key: "3", value: element() },
         { key: "4", value: element() },
@@ -28,9 +86,9 @@ export default function History({navigation}){
         { key: "17", value: element() },
         { key: "18", value: element() },
         { key: "19", value: element() },
-        { key: "20", value: element() },
+        { key: "20", value: element() },*/
       ];
-      function  element()
+      function  element(title,amount,type)
         {
             const styles = StyleSheet.create({
                 historyIcon:{
@@ -39,7 +97,6 @@ export default function History({navigation}){
                 height: 40
                 },
                 historyElement:{
-
                 padding: 20
                 },
                 sum:{
@@ -61,11 +118,10 @@ export default function History({navigation}){
                                             source={require("../assets/creditcard.png")}
                                         />
                                         <View style={styles.mainContent}>
-                                            <Text>STACJA PALIW NR 7...</Text>
-                                            <Text>*********0045967</Text>
-                                            <Text>KONTO PRZEKORZYSTNE</Text>
+                                            <Text>{title}</Text>
+                                            <Text>{type}</Text>
                                         </View>
-                                        <Text style={styles.sum}>-49,84 PLN</Text> 
+                                        <Text style={styles.sum}>{amount}PLN</Text> 
                                     </HStack>
                                         
                                     
@@ -76,20 +132,27 @@ export default function History({navigation}){
             
             <View style={styles.container}>
                 <NativeBaseProvider>
-                    <ImageBackground 
-                      source={require('../assets/euro.jpg')} 
-                      style={styles.image}>
+                    
                     <View style={styles.backElement}>
                         <Text style={styles.header}>Historia Operacji</Text>
+                        <Select  variant="filled" size="2xl" placeholder="Numer klienta" onValueChange={value => setAccountNumber(value)}>
+                           
+                               
+                                  {accountList.map((item, index) => {
+                    
+                                    return <Select.Item label={item} value={item} key={item} />
+                                  })}
+                               
+                                </Select>
                         <FlatList
                             style={styles.lista}
                             horizontal={false}
-                            data={data}
+                            data={tarnsferList}
                             renderItem={({ item }) => <Text>{item.value}</Text>}
                           />
                        
                     </View>
-                    </ImageBackground>  
+                
                 </NativeBaseProvider>
               </View>
               
@@ -98,6 +161,7 @@ export default function History({navigation}){
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "white",
     flex: 1,
   },
   image: {
@@ -106,14 +170,14 @@ const styles = StyleSheet.create({
   },
   backElement:{
     backgroundColor: "#ffffff",
-    width: "100%",
-    minHeight: "40%",
-    height: "90%",
-    borderTopLeftRadius: 38,
-    borderTopRightRadius:38,
-    position: "absolute",
-    alignItems: "center",
-    bottom: 0,
+    //width: "100%",
+    //minHeight: "40%",
+    //height: "90%",
+    //borderTopLeftRadius: 38,
+    //borderTopRightRadius:38,
+    //position: "absolute",
+    //alignItems: "center",
+   // bottom: 0,
     
   },
   content:{

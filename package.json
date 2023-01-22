@@ -16,12 +16,17 @@
     "@react-navigation/native": "^6.1.1",
     "@react-navigation/native-stack": "^6.9.6",
     "expo": "~47.0.8",
+    "expo-barcode-scanner": "~12.1.0",
+    "expo-camera": "~13.1.0",
+    "expo-local-authentication": "^13.0.2",
     "expo-status-bar": "~1.4.2",
     "firebase": "^9.15.0",
     "native-base": "^3.4.25",
     "qrcode": "^1.5.1",
     "react": "18.1.0",
     "react-native": "0.70.5",
+    "react-native-biometrics": "^3.0.1",
+    "react-native-fingerprint-scanner": "^6.0.0",
     "react-native-gesture-handler": "~2.8.0",
     "react-native-qrcode-svg": "^6.1.2",
     "react-native-reanimated": "~2.12.0",
@@ -29,12 +34,11 @@
     "react-native-screens": "^3.18.2",
     "react-native-share": "^8.1.0",
     "react-native-svg": "^13.4.0",
-    "rn-fetch-blob": "^0.12.0",
-    "expo-camera": "~13.1.0",
-    "expo-barcode-scanner": "~12.1.0"
+    "rn-fetch-blob": "^0.12.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9"
+    "@babel/core": "^7.12.9",
+    "react-native-local-auth": "^1.6.0"
   },
   "private": true
 }

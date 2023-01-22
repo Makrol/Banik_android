@@ -1,14 +1,15 @@
 
-import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,Text,FlatList} from 'react-native';
+import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,Text,FlatList,Clipboard} from 'react-native';
 import React, { useState,useEffect } from 'react';
-import {NativeBaseProvider, ScrollView,HStack } from "native-base";
+import {NativeBaseProvider, ScrollView,Box } from "native-base";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {auth} from "../firebase.js";
 import {db} from "../firebase.js";
 import {User,userConverter} from "../firebase.js";
 import { collection, doc,getDoc,query,where,getDocs  } from "firebase/firestore";
 import{getAuth, signInWithEmailAndPassword,onAuthStateChanged} from "firebase/auth";
-function accountElement(name, money){
+
+function accountElement(name, money,number){
   const styles = StyleSheet.create({
     accountText:{
       color:"#ffffff",
@@ -23,27 +24,51 @@ function accountElement(name, money){
       alignItems: "center",
       justifyContent: 'center',
       color:"#ffffff",
+    },
+    accountNumber:{
+      color:"#ffffff",
+      fontSize: 16,
+      fontWeight: "bold"
+    },
+    copyToClipboard:{
+      backgroundColor: "#D45500",
+      height: 20,
+      width: 20,
+      alignItems: "center",
+      justifyContent: 'center'
     }
   });
+  const handleCopy = async () => {
+    await Clipboard.setString(number);
+  };
   return(
-    <TouchableOpacity 
+    <Box 
     style={styles.accountInfo} 
       >
       <View >
         <Text style={styles.accountText}>{name}</Text>
+        <Text style={styles.accountNumber}>{number}
+        <TouchableOpacity style={styles.copyToClipboard} onPress={() =>handleCopy()}>
+                            <Image
+                                source={require('../assets/copy.png')}>
+                            </Image>
+                          </TouchableOpacity>
+        </Text>
         <Text style={styles.accountText}>{money} PLN</Text>
       </View>
         
-    </TouchableOpacity>
+    </Box>
   );
 }
 
 
 
 export default function Menu({ navigation }){
+  
   const [accountList,setAccountList] = useState([]);
   const [userData,setUserData] = useState(-1);
   
+ 
   onAuthStateChanged(auth, (user) => {
     
     if (user) 
@@ -67,7 +92,7 @@ export default function Menu({ navigation }){
     getDocs(q).then(querySnapshot=>{
         const tmpTab = [];
         querySnapshot.forEach((doc) => {
-              tmpTab.push({ key: doc.id, value: accountElement(doc.data().name,doc.data().money)});
+              tmpTab.push({ key: doc.id, value: accountElement(doc.data().name,doc.data().money,doc.id)});
         });
         setAccountList(tmpTab);
     });
@@ -129,4 +154,5 @@ const styles = StyleSheet.create({
   lista:{
     marginTop: "50%"
   },
+
 });

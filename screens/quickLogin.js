@@ -1,32 +1,42 @@
-import { StatusBar } from 'expo-status-bar';
-import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,KeyboardAvoidingView  } from 'react-native';
-import { Box, Center, NativeBaseProvider,Input,Stack,Text } from "native-base";
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ImageBackground,StyleSheet, Image, View,TouchableOpacity} from 'react-native';
+import { Center, NativeBaseProvider,Stack,Text } from "native-base";
 import {buttonStyle} from '../shered/Styles.js';
-import {auth} from "../firebase.js";
-import {db} from "../firebase.js";
-import { collection, doc, setDoc,getDoc  } from "firebase/firestore";
-import{getAuth, signInWithEmailAndPassword,onAuthStateChanged} from "firebase/auth";
-import {useState} from 'react';
+import {useState,useEffect} from 'react';
+import * as LocalAuthentication from 'expo-local-authentication';
 
-export default function Login2({ navigation }){
-    const [email,setEmail] = useState('');
-    const [password,setPassword] = useState('');
-    
-    const login = async (email,password)=>{
-      try {
-        
-        await signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential)=>{
-            userCredential.user;
+export default function QuickLogin({ navigation }){
+     
+  const [biometrics, setBiometrics] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const compatible = await LocalAuthentication.hasHardwareAsync();
+      setBiometrics(compatible);
+    })();
+  }, []);
+
+  const fingerPrintLogin = ()=>{
+      (async () => {
+        if(biometrics)
+        {
+          const auth = await LocalAuthentication.authenticateAsync();
+          if (auth.success) 
+          {
             navigation.popToTop();
             navigation.replace('DrawerRoot');
-          });
-      } catch (err) {
-        alert(err.message);
-      }
-    }
+          }
+          else
+          {
+
+          }
+        }else{
+          navigation.popToTop();
+          navigation.replace('PinLogin');
+        }
+          
+
+      })();
+  }
+ 
     return (
       
             <View style={styles.container}>
@@ -39,19 +49,26 @@ export default function Login2({ navigation }){
                         <Image
                             source={require('../assets/banklogo.png')}
                             style={styles.logo}>
+                            
                         </Image>
-                        
+  
                       </Center>
                       
                       <View style={styles.backElement}>
                         <Stack space={4} w="75%" maxW="300px" mx="auto" style={styles.vstack}>
-                            <Text style={styles.header}>Witaj na pokładzie</Text>
-                            <Input variant="filled" placeholder="login" value={email} onChangeText={text=>setEmail(text)}/>
-                            <Input variant="filled" secureTextEntry={true} placeholder="hasło" value={password} onChangeText={text=>setPassword(text)}/>
-                            <Text>Nie pamiętasz hasła?</Text>
+                            <Text style={styles.header}>Szybkie logowanie</Text>
+                            
+                            
                             <Center>
-                              <TouchableOpacity onPress={()=>login(email,password)}  style={styles.buttonOrange}  > 
-                                  <Text style={buttonStyle.buttonOrangeText}>Zaloguj</Text>
+                                <Image
+                                    source={require('../assets/fingerprint.png')}
+                                    style={styles.fingerLogo}>
+                                </Image>
+                              <TouchableOpacity onPress={()=>fingerPrintLogin()}  style={styles.buttonOrange}  > 
+                                  <Text style={buttonStyle.buttonOrangeText}>Skanuj Odcisk</Text>
+                              </TouchableOpacity> 
+                              <TouchableOpacity onPress={()=>navigation.navigate("PinLogin")}  style={styles.buttonOrange}  > 
+                                  <Text style={buttonStyle.buttonOrangeText}>Logowanie przez PIN</Text>
                               </TouchableOpacity>
                             </Center>
                             
@@ -91,6 +108,14 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     marginTop: "15%",
+    marginBottom: "15%",
+
+  },
+  fingerLogo:{
+    width: 150,
+    height: 150,
+    marginTop: "0%",
+    marginBottom: "0%",
 
   },
   backElement:{
@@ -112,7 +137,8 @@ const styles = StyleSheet.create({
     color: "#D45500",
     fontWeight: "bold",
     fontSize: 32,
-    padding: "5%"
+    padding: "5%",
+    marginTop: 0,
   }
 
 });

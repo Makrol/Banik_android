@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View,TouchableOpacity,Image } from 'react-native';
+import { StyleSheet, Text, View,Alert,Image } from 'react-native';
 import {useState} from 'react';
 import { Button, Box, Center, NativeBaseProvider } from "native-base";
 import { NavigationContainer } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import Login1 from './screens/loginScreen1';
 import Login2 from './screens/loginScreen2';
 import mainMenu from './screens/mainMenu';
 import transfer from './screens/transfer';
+import limits from './screens/limits';
 import TransferTypes from './screens/transferTypes';
 import TransferForm from './screens/transferForm';
 import BlikForm from './screens/blikForm';
@@ -16,12 +17,22 @@ import History from './screens/History';
 import TransferDetails from './screens/TransferDetails';
 import RegisterUser from './screens/registerUser';
 import ScanScreen from './screens/ScanQr';
+import QuickLogin from './screens/quickLogin';
+import PinLogin from './screens/pinLogin';
+import Settings from './screens/settings';
+import NewPIN from './screens/newPIN';
+import SetMainAccount from './screens/setMainAccount';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import 'react-native-gesture-handler';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator,DrawerItem} from '@react-navigation/drawer';
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-//import * as React from "react";
+import {auth} from "./firebase.js";
+import { collection, doc,getDoc,query,where,getDocs, updateDoc,addDoc  } from "firebase/firestore";
+import{onAuthStateChanged} from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
+import { AlertDialog } from "native-base";
+import * as LocalAuthentication from 'expo-local-authentication'
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -69,7 +80,7 @@ function BottomTabsRoot({ navigation }) {
       />
       <Tab.Screen
         name="Blik"
-        component={mainMenu}
+        component={BlikForm}
         options={{
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
@@ -117,7 +128,7 @@ function BottomTabsRoot({ navigation }) {
       />
       <Tab.Screen
         name="Limity"
-        component={mainMenu}
+        component={limits}
         options={{
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
@@ -136,26 +147,68 @@ function BottomTabsRoot({ navigation }) {
   );
 }
 import { LogBox } from 'react-native';
-LogBox.ignoreAllLogs();//Ignore all log notifications
+LogBox.ignoreAllLogs();
 function DrawerRoot({ navigation }) {
   return (
     <Drawer.Navigator
       screenOptions={{ headerShown: false}}
     >
-      <Drawer.Screen name="BottomTabsRoot" component={BottomTabsRoot} />
+      <Drawer.Screen name="Menu Główne" component={BottomTabsRoot} />
+      <Drawer.Screen name="Ustawienia" component={Settings} />
+      <Drawer.Screen name="Wyloguj" component={LogOut}/>
     </Drawer.Navigator>
     
   );
 }
 
+const LogOut = ({ navigation }) => {
+  signOut(auth).then(() => {
+    Alert.alert(
+      'Wylogowano',
+      'Do zobaczenia wkrótce :)',
+      [
+        {
+          text: 'Ok',
+        },
+      ],
+    );
+    navigation.navigate("login1");
+  }).catch((error) => {
+    // An error happened.
+  });
+  
+}
+
+
 const StartScreen = ({ navigation }) => {
+  onAuthStateChanged(auth, (user) => {
+
+
+    //console.log(data.accountNumber);
+    if (user) 
+    {
+        const compatible = LocalAuthentication.hasHardwareAsync();
+        if(compatible){
+          navigation.navigate("QuickLogin");
+        }else{
+          navigation.navigate("pinLogin");
+        }
+    } 
+    else {
+      navigation.navigate("login1");
+    }  
+
+  });
+
+
   return (
       <View style={styles.container}>
             <NativeBaseProvider>
                   <Center flex={1} px="3">
-                          <Text> Mobilna Aplikacja Banku </Text>
-                          <Button onPress={() =>navigation.navigate("login1")}>Użytkownik nie zalogowany</Button>
-                          <Button onPress={() => console.log("hello world")}>Użytkownik zalogowany</Button>
+                  <Image
+                            source={require('./assets/banklogo.png')}
+                            style={styles.logo}>
+                        </Image>
                   </Center>
             </NativeBaseProvider>
       </View>
@@ -180,6 +233,10 @@ export default function App() {
             <Stack.Screen name="TransferDetails" component={TransferDetails}/>
             <Stack.Screen name="registerUser" component={RegisterUser}/>
             <Stack.Screen name="ScanQr" component={ScanScreen}/>
+            <Stack.Screen name="QuickLogin" component={QuickLogin}/>
+            <Stack.Screen name="PinLogin" component={PinLogin}/>
+            <Stack.Screen name="NewPin" component={NewPIN}/>
+            <Stack.Screen name="SetMainAccount" component={SetMainAccount}/>
           </Stack.Navigator>
         </NavigationContainer>
       );
@@ -202,5 +259,10 @@ const styles = StyleSheet.create({
   bottomText:{
     color: "#ffffff",
     fontWeight: "bold",
+  },
+  logo:{
+    width: 220,
+    height: 220,
+    marginTop: "20%"
   }
 });

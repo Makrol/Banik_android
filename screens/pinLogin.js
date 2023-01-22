@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,KeyboardAvoidingView  } from 'react-native';
+import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,Alert  } from 'react-native';
 import { Box, Center, NativeBaseProvider,Input,Stack,Text } from "native-base";
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,22 +10,39 @@ import { collection, doc, setDoc,getDoc  } from "firebase/firestore";
 import{getAuth, signInWithEmailAndPassword,onAuthStateChanged} from "firebase/auth";
 import {useState} from 'react';
 
-export default function Login2({ navigation }){
-    const [email,setEmail] = useState('');
-    const [password,setPassword] = useState('');
+export default function PinLogin({ navigation }){
+    const [pin,setPin] = useState('');
+    const [userData,setUserData] = useState("");
+    onAuthStateChanged(auth, (user) => {
+        if(user)
+        {
+            setUserData(user.email);
+        }
+       
+    });
     
-    const login = async (email,password)=>{
-      try {
-        
-        await signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential)=>{
-            userCredential.user;
-            navigation.popToTop();
-            navigation.replace('DrawerRoot');
-          });
-      } catch (err) {
-        alert(err.message);
-      }
+    const login = async ()=>{
+        const docRef = doc(db,"users",userData);
+        getDoc(docRef).then(docSnap=>{
+        if (docSnap.exists()) {
+            if(docSnap.data().pin==pin)
+            {
+              navigation.popToTop();
+              navigation.replace('DrawerRoot');
+            }
+            else{
+                Alert.alert(
+                    'Logowanie',
+                    'Nie poprawny PIN',
+                    [
+                      {
+                        text: 'Ok',
+                      },
+                    ],
+                  );
+            }
+        }
+        });
     }
     return (
       
@@ -45,13 +62,19 @@ export default function Login2({ navigation }){
                       
                       <View style={styles.backElement}>
                         <Stack space={4} w="75%" maxW="300px" mx="auto" style={styles.vstack}>
-                            <Text style={styles.header}>Witaj na pokładzie</Text>
-                            <Input variant="filled" placeholder="login" value={email} onChangeText={text=>setEmail(text)}/>
-                            <Input variant="filled" secureTextEntry={true} placeholder="hasło" value={password} onChangeText={text=>setPassword(text)}/>
-                            <Text>Nie pamiętasz hasła?</Text>
+                            
+                            <Text style={styles.header}>Szybkie logowanie</Text>
+                            <Center style={styles.pinInput}>
+                            <Input variant="filled" placeholder="PIN" value={pin} onChangeText={text=>setPin(text)} /> 
+
+                            </Center>
+                            
+                            
                             <Center>
-                              <TouchableOpacity onPress={()=>login(email,password)}  style={styles.buttonOrange}  > 
-                                  <Text style={buttonStyle.buttonOrangeText}>Zaloguj</Text>
+                            
+                              <TouchableOpacity onPress={()=>login()}  style={styles.buttonOrange}  >
+                              
+                                <Text style={buttonStyle.buttonOrangeText}>Zaloguj</Text>
                               </TouchableOpacity>
                             </Center>
                             
@@ -91,6 +114,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     marginTop: "15%",
+    marginBottom: "15%",
 
   },
   backElement:{
@@ -104,15 +128,22 @@ const styles = StyleSheet.create({
     bottom: 0
   },
   vstack:{
+    
     width:"100%",
     height: "100%",
     justifyContent: 'center'
   },
   header:{
+    
     color: "#D45500",
     fontWeight: "bold",
     fontSize: 32,
-    padding: "5%"
+    padding: "5%",
+    marginTop: 0,
+  },
+  pinInput:{
+    marginTop: "20%",
+    marginBottom: "20%"
   }
 
 });
