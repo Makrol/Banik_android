@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,Alert  } from 'react-native';
-import { Box, Center, NativeBaseProvider,Input,Stack,Text } from "native-base";
+import { Box, Center, NativeBaseProvider,Input,Stack,Text,ScrollView } from "native-base";
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {buttonStyle} from '../shered/Styles.js';
@@ -61,24 +61,25 @@ export default function PinLogin({ navigation }){
                       </Center>
                       
                       <View style={styles.backElement}>
-                        <Stack space={4} w="75%" maxW="300px" mx="auto" style={styles.vstack}>
+                      <Text style={styles.header}>Szybkie logowanie</Text>
+                      
+                        <Stack space={3} w="75%" maxW="350px" mx="auto" style={styles.vstack}>
+                        <ScrollView style={styles.scrol}>
                             
-                            <Text style={styles.header}>Szybkie logowanie</Text>
                             <Center style={styles.pinInput}>
-                            <Input variant="filled" placeholder="PIN" value={pin} onChangeText={text=>setPin(text)} /> 
+                            <Input variant="filled" size="2xl" secureTextEntry={true} placeholder="PIN" keyboardType = 'number-pad' value={pin} onChangeText={text => {
+                                    let cleanedText = text.replace(/[^0-9]/g, '');
+                                    if(cleanedText.length > 4) return;
+                                    setPin(cleanedText);}}/>
 
-                            </Center>
-                            
-                            
-                            <Center>
-                            
                               <TouchableOpacity onPress={()=>login()}  style={styles.buttonOrange}  >
                               
                                 <Text style={buttonStyle.buttonOrangeText}>Zaloguj</Text>
                               </TouchableOpacity>
                             </Center>
-                            
+                            </ScrollView>
                         </Stack>
+                       
                       </View>
 
                     </ImageBackground>
@@ -107,6 +108,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   image: {
+    
       width: '100%',
       height: '100%'
   },
@@ -128,22 +130,24 @@ const styles = StyleSheet.create({
     bottom: 0
   },
   vstack:{
-    
+
     width:"100%",
     height: "100%",
     justifyContent: 'center'
   },
   header:{
-    
+    alignSelf: 'center',
     color: "#D45500",
     fontWeight: "bold",
     fontSize: 32,
-    padding: "5%",
-    marginTop: 0,
+    padding: "7%",
+    marginTop: 15,
   },
   pinInput:{
-    marginTop: "20%",
-    marginBottom: "20%"
-  }
-
+   // marginTop: "10%",
+    //marginBottom: "10%"
+  },
+  scrol:{
+    width:"100%"
+  },
 });

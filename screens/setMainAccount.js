@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
       
     },
     content:{
-      width: 370,
+      width: '100%',
       marginTop: "10%",
 
     },

@@ -32,12 +32,9 @@ export default function GenerateCode({ navigation }){
       if(email!="")
       {
         getDoc(doc(db, "users",email)).then(user=>{
-          const q = query(collection(db,"accounts"),where("owner","==",user.data().accountNumber));
-          getDocs(q).then(querySnapshot=>{
-            if(!querySnapshot.empty)
-              setJsonOut('{"name": "'+user.data().name+" "+user.data().surname+'", "accountNumber": "'+querySnapshot.docs[0].id+'"}')
-            
-          }); 
+          getDoc(doc(db, "mainAccount",user.data().accountNumber)).then(accountNum=>{
+            setJsonOut('{"name": "'+user.data().name+" "+user.data().surname+'", "accountNumber": "'+accountNum.data().main+'"}')
+          })
       })
       }
      

@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,KeyboardAvoidingView  } from 'react-native';
+import { ImageBackground,StyleSheet, Image, View,TouchableOpacity,KeyboardAvoidingView,Alert  } from 'react-native';
 import { Box, Center, NativeBaseProvider,Input,Stack,Text } from "native-base";
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -24,9 +24,19 @@ export default function Login2({ navigation }){
             navigation.replace('DrawerRoot');
           });
       } catch (err) {
-        alert(err.message);
+
+        Alert.alert(
+          'Logowanie',
+          'Nie możemy zalogować Cię za pomocą podanych przez Ciebie danych.',
+          [
+            {
+              text: 'Ok',
+            },
+          ],
+        );        
       }
     }
+  
     return (
       
             <View style={styles.container}>
@@ -44,13 +54,14 @@ export default function Login2({ navigation }){
                       </Center>
                       
                       <View style={styles.backElement}>
-                        <Stack space={4} w="75%" maxW="300px" mx="auto" style={styles.vstack}>
-                            <Text style={styles.header}>Witaj na pokładzie</Text>
-                            <Input variant="filled" placeholder="login" value={email} onChangeText={text=>setEmail(text)}/>
-                            <Input variant="filled" secureTextEntry={true} placeholder="hasło" value={password} onChangeText={text=>setPassword(text)}/>
-                            <Text>Nie pamiętasz hasła?</Text>
+                      <Text style={styles.header}>Witaj na pokładzie</Text>
+
+                        <Stack space={5} w="75%" maxW="300px" mx="auto" style={styles.vstack}>
+                            <Input variant="filled" placeholder="Email" value={email} onChangeText={text=>setEmail(text)}/>
+                            <Input variant="filled" secureTextEntry={true} placeholder="Hasło" value={password} onChangeText={text=>setPassword(text)}/>
+                            
                             <Center>
-                              <TouchableOpacity onPress={()=>login(email,password)}  style={styles.buttonOrange}  > 
+                              <TouchableOpacity onPress={()=>login(email.trim(),password)} style={styles.buttonOrange}> 
                                   <Text style={buttonStyle.buttonOrangeText}>Zaloguj</Text>
                               </TouchableOpacity>
                             </Center>
@@ -72,7 +83,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 38,
     width: "80%",
-    marginTop: "8%",
+    //marginTop: "8%",
     alignItems: "center",
     justifyContent: 'center'
   },
@@ -106,9 +117,10 @@ const styles = StyleSheet.create({
   vstack:{
     width:"100%",
     height: "100%",
-    justifyContent: 'center'
+    
   },
   header:{
+    marginLeft:"6%",
     color: "#D45500",
     fontWeight: "bold",
     fontSize: 32,

@@ -1,20 +1,49 @@
 import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Image} from 'react-native';
-import {NativeBaseProvider,HStack,Input,Stack} from "native-base";
-import {useState} from 'react';
-
+import {NativeBaseProvider,HStack,Input,VStack, Center, ScrollView} from "native-base";
+import {useEffect, useState} from 'react';
+import {auth} from "../firebase.js";
+import {db} from "../firebase.js";
+import { collection, doc,getDoc,query,where,getDocs, updateDoc,addDoc  } from "firebase/firestore";
+import{onAuthStateChanged} from "firebase/auth";
 
 
 export default function Limit({ navigation }){
-    const[getDailyWithdrawalLimit,setDailyWithdrawalLimit] = useState("");
-    const[getDailyCardLimit,setDailyCardLimit] = useState("");
-
+    const[getDailyWithdrawalLimit,setDailyWithdrawalLimit] = useState(0);
+    const[getDailyLimit,setDailyLimit] = useState(0);
+    const [userData,setUserData] = useState(-1);
     function changeLimits(){
 
-      //tutaj zmieniamy w bazie wartosci limitow
-      navigation.popToTop();
+      updateDoc(doc(db, "users", userData),{
+        cardLimit: Number(getDailyWithdrawalLimit),
+        transferLimit: Number(getDailyLimit),
+      })
       navigation.replace('DrawerRoot');
     }
-
+    onAuthStateChanged(auth, (user) => {
+      if (user) 
+      {
+        setUserData(user.email);
+        
+      } 
+      else {
+        // User is signed out
+        // ...
+      }  
+  
+    });
+    useEffect(()=>{
+      if(userData!=-1)
+      {
+       
+        const docRef = doc(db,"users",userData);
+        getDoc(docRef).then(docSnap=>{
+        if (docSnap.exists()) {
+            setDailyWithdrawalLimit(docSnap.data().cardLimit);
+            setDailyLimit(docSnap.data().transferLimit);
+        }
+        });  
+      }
+    },[userData])
 
 
     return (
@@ -25,12 +54,34 @@ export default function Limit({ navigation }){
                       source={require('../assets/euro.jpg')} 
                       style={styles.image}>
                     <View style={styles.backElement}>
-                        <Text style={styles.header}>Limity</Text>
-                        <Input variant="filled" size="2xl" placeholder="Wprowadź nowy limit wypłat kartą" value={getDailyWithdrawalLimit} onChangeText={value => setDailyWithdrawalLimit(value)}/>
-                        <Input variant="filled" size="2xl" placeholder="Wprowadź nowy limit BLIK" value={getDailyCardLimit} onChangeText={value => setDailyCardLimit(value)}/>
-                        <TouchableOpacity onPress={() => changeLimits()} style={styles.buttonOrange}>
-                          <Text style={styles.buttonOrangeText}>Zmień</Text>
+                    
+                    <VStack space={3} style={styles.vstack}>
+                    
+                    <Center><Text style={styles.header}>Limity</Text></Center>
+                    <ScrollView>
+                        <Text style={styles.limitText}>Dzienny limit wypłat kartą:</Text>
+                        <Input variant="filled" size="2xl" placeholder="Wprowadź nowy limit" keyboardType = 'number-pad' value={getDailyWithdrawalLimit.toString()} onChangeText={value => setDailyWithdrawalLimit(value)}
+                        onBlur={() => {
+                          if (getDailyWithdrawalLimit === '') {
+                            setDailyWithdrawalLimit('0');
+                          }
+                        }}/>
+                        
+                        <Text style={styles.limitText}>Dzienny limit płatności:</Text>
+                        <Input variant="filled" size="2xl" placeholder="Wprowadź nowy limit" keyboardType = 'number-pad' value={getDailyLimit.toString()} onChangeText={value => setDailyLimit(value)}
+                        onBlur={() => {
+                          if (getDailyLimit === '') {
+                            setDailyLimit('0');
+                          }
+                        }}/>
+                        
+                        <Center><TouchableOpacity onPress={() => changeLimits()} style={styles.buttonOrange}>
+                        <Text style={styles.buttonOrangeText}>Zmień</Text>
                         </TouchableOpacity>
+                        </Center>
+                        </ScrollView>
+                    </VStack>
+                    
                         </View>
                     </ImageBackground>  
                 </NativeBaseProvider>
@@ -47,19 +98,23 @@ const styles = StyleSheet.create({
       width: '100%',
       height: '100%'
   },
+  buttonOrangeText:{
+      color: "white",
+      
+  },
   buttonOrange:{
     backgroundColor: "#D45500",
     padding: 20,
     borderRadius: 38,
-    width: "80%",
-    marginTop: "15%",
+    width: "60%",
+    marginTop: "5%",
     alignItems: "center",
     justifyContent: 'center'
   },
   backElement:{
     backgroundColor: "#ffffff",
     width: "100%",
-    minHeight: "40%",
+    minHeight: "60%",
     height: "90%",
     borderTopLeftRadius: 38,
     borderTopRightRadius:38,
@@ -76,7 +131,9 @@ const styles = StyleSheet.create({
     color: "#D45500",
     fontWeight: "bold",
     fontSize: 32,
-    padding: "5%"
+    padding: "5%",
+    alignItems: "center",
+    justifyContent: 'center'
   },
   button:{
     backgroundColor: "#D45500",
@@ -99,11 +156,9 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   vstack:{
-    width:"100%",
-    alignItems: "center",
-    height: 300,
-    justifyContent: 'center',
-
+    width:"90%", 
+    marginTop:"5%",
+    height: '70%',
   },
   limits:{
     color: "black",
@@ -112,4 +167,11 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     width: "90%",
   },
+  limitText:{
+    color: "black",
+    fontSize: 16,
+    padding: "1%",
+    
+  },
+
 });

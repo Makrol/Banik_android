@@ -1,4 +1,4 @@
-import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Image} from 'react-native';
+import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Image,Alert} from 'react-native';
 import {NativeBaseProvider,HStack,VStack, ScrollView,Input,Center,Button,Icon} from "native-base";
 import { Ionicons } from "@expo/vector-icons";
 import {useState,useEffect} from 'react';
@@ -18,6 +18,7 @@ export default function FuncregisterUser({ navigation }){
     const[getPassword,setPassword] = useState("");
     const[getPin,setPin] = useState("");
     const[isValid, setIsValid] = useState(false);
+    const[getPhoneNumber,setPhoneNumber] = useState("");
 
 
     const passwordRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})");
@@ -25,12 +26,8 @@ export default function FuncregisterUser({ navigation }){
 
 
     const handlePasswordChange = (value) => {
-        setPassword(value);
-        setIsValid(passwordRegex.test(value));
-    };
-    const handleClientNumberChange = (value) => {
-        setClientNumber(value);
-        setIsValid(value.length === 8);
+      setPassword(value);
+      setIsValid(passwordRegex.test(value));
     };
     const handlePinChange = (value) => {
         setPin(value);
@@ -46,56 +43,115 @@ export default function FuncregisterUser({ navigation }){
     };
 
     function addUser(){
+        if(getEmail=="")
+        {
+          Alert.alert(
+            'Rejestracja',
+            'Mail nie może być pusty',
+            [
+              {
+                text: 'Ok',
+              },
+            ],
+          );
+          return;
+        }
         
         getDoc(doc(db, "users",getEmail)).then(response=>{
             //updateDoc(doc(db, "accounts", recipentAccountNumber),{
               //money: parseInt(recipentResponse.data().money)+parseInt(transferAmount),
             //})
-            
+            console.log(response.data());
             if(response.data()!=null)
             {
-              if(response.data().accountNumber==getClientNumber)
+              if(response.data().accountNumber==getClientNumber && response.data().name==getName && response.data().surname==getSurname && response.data().pesel==getPesel )
               {
                 console.log(response.data());
                 console.log(response.id);
                 updateDoc(doc(db, "users", getEmail),{
-                    name: getName,
-                    surname:getSurname,
                     pin:getPin,
-                    pesel:getPesel,
+                    phoneNumber:getPhoneNumber,
                   })
-                  navigation.navigate("login2");
+                  //navigation.navigate("login2");
 
 
                   createUserWithEmailAndPassword(auth,getEmail, getPassword)
                   .then(() => {
                     
-      
-                      console.log('User account created & signed in!');
                       navigation.navigate("login2");
                   })
                   .catch(error => {
                       if (error.code === 'auth/email-already-in-use') {
-                      console.log('That email address is already in use!');
+                        Alert.alert(
+                          'Rejestracja',
+                          'Konto o tym emailu już istnieje',
+                          [
+                            {
+                              text: 'Ok',
+                            },
+                          ],
+                        );
                       }
       
                       if (error.code === 'auth/invalid-email') {
-                      console.log('That email address is invalid!');
+                        Alert.alert(
+                          'Rejestracja',
+                          'Email niepoprawny',
+                          [
+                            {
+                              text: 'Ok',
+                            },
+                          ],
+                        );
                       }
-      
+                      
                       console.error(error);
                   });
                   
               }else{
-                console.log("Nie poprawny numer konta");
+                Alert.alert(
+                  'Rejestracja',
+                  'Dane rejestracji niepoprawne',
+                  [
+                    {
+                      text: 'Ok',
+                    },
+                  ],
+                );
               }
             }
             else{
-                console.log("Uzytkownik nie istnieje");
+              Alert.alert(
+                'Rejestracja',
+                'Nie możemy Cię zarejestrować',
+                [
+                  {
+                    text: 'Ok',
+                  },
+                ],
+              );
             }
             
         }).catch(error=>{
-            console.log("error");
+          Alert.alert(
+            'Rejestracja',
+            'Dane rejestracji niepoprawne',
+            [
+              {
+                text: 'Ok',
+              },
+            ],
+          );
+        }).catch(error=>{
+          Alert.alert(
+            'Rejestracja',
+            'Dane rejestracji niepoprawne',
+            [
+              {
+                text: 'Ok',
+              },
+            ],
+          );
         })
 
 
@@ -127,8 +183,10 @@ export default function FuncregisterUser({ navigation }){
                     </View>
                     <View>
                         <Text style={styles.label}>Pesel:</Text>
-                        <Input variant="filled" size="2xl" placeholder="Pesel" keyboardType = 'number-pad' value={getPesel} onChangeText={handlePeselChange} error={!isValid} errorText="Numer Pesel musi składać się z 11 cyfr."/>
-
+                        <Input variant="filled" size="2xl" placeholder="Pesel" keyboardType = 'number-pad' value={getPesel} onChangeText={text => {
+                                    let cleanedText = text.replace(/[^0-9]/g, '');
+                                    if(cleanedText.length > 11) return;
+                                    setPesel(cleanedText);}}/>
                     </View>
                     <View>
                         <Text style={styles.label}>Email:</Text>
@@ -137,8 +195,18 @@ export default function FuncregisterUser({ navigation }){
                     </View>
                     <View>
                         <Text style={styles.label}>Numer Klienta:</Text>
-                        <Input variant="filled" size="2xl" placeholder="Numer Klienta" keyboardType = 'number-pad' value={getClientNumber} onChangeText={handleClientNumberChange} error={!isValid} errorText="Numer Klienta musi składać się z 8 cyfr."/>
-
+                        <Input variant="filled" size="2xl" placeholder="Numer Klienta" keyboardType = 'number-pad' value={getClientNumber} onChangeText={text => {
+                                    let cleanedText = text.replace(/[^0-9]/g, '');
+                                    if(cleanedText.length > 8) return;
+                                    setClientNumber(cleanedText);}}/>
+                    </View>
+                    <View>
+                        <Text style={styles.label}>Numer telefonu:</Text>
+                        <Input variant="filled" size="2xl" placeholder="Numer telefonu" keyboardType = 'number-pad' value={getPhoneNumber} onChangeText={text => {
+                                    let cleanedText = text.replace(/[^0-9]/g, '');
+                                    if(cleanedText.length > 9) return;
+                                    if(cleanedText.length === 1 && cleanedText === "0") return;
+                                    setPhoneNumber(cleanedText);}}/>
                     </View>
                     <View>
                         <Text style={styles.label}>Hasło:</Text>
@@ -147,7 +215,11 @@ export default function FuncregisterUser({ navigation }){
                     </View>
                     <View>
                         <Text style={styles.label}>Pin:</Text>
-                        <Input variant="filled" size="2xl" placeholder="Pin" keyboardType = 'number-pad' value={getPin} onChangeText={handlePinChange} error={!isValid} errorText="Numer Pin musi składać się z 4 cyfr."/>
+                        <Input variant="filled" size="2xl" placeholder="Pin" keyboardType = 'number-pad' value={getPin} onChangeText={text => {
+                                    let cleanedText = text.replace(/[^0-9]/g, '');
+                                    if(cleanedText.length > 4) return;
+                                    if(cleanedText.length === 1 && cleanedText === "0") return;
+                                    setPin(cleanedText);}}/>
 
                     </View>
                     <Center>

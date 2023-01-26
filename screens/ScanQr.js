@@ -24,8 +24,6 @@ export default function ScanScreen({navigation}) {
 
   const handleBarCodeScanned = ({type, data}) => {
     setScanData(data);
-    //console.log(`Data: ${data}`);
-    //console.log(`Type: ${type}`);
     
     const pattern = /^\{"name": "([\w\s]+)", "accountNumber": "([\w\s]+)"\}$/;
     if(pattern.test(data)==true)

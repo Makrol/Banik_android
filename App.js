@@ -92,6 +92,9 @@ function BottomTabsRoot({ navigation }) {
                 />
             </View>
           ),
+          initialParams: {
+            myParam: "bot"
+          }
         }}
       />
       <Tab.Screen

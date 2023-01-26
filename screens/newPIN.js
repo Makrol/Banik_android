@@ -67,8 +67,14 @@ export default function NewPIN({ navigation }){
                         <Text style={styles.header}>Zmiana Pinu</Text>
                         <View style={styles.content}>
                             <VStack space={5}>
-                                <Input variant="filled" placeholder="stary PIN" value={getOldPin} onChangeText={text=>setOldPin(text)} /> 
-                                <Input variant="filled" placeholder="nowy PIN" value={getNewPin} onChangeText={text=>setNewPin(text)} /> 
+                                <Input variant="filled" size="2xl" placeholder="stary PIN" keyboardType = 'number-pad' value={getOldPin} onChangeText={text => {
+                                    let cleanedText = text.replace(/[^0-9]/g, '');
+                                    if(cleanedText.length > 4) return;
+                                    setOldPin(cleanedText);}}/>
+                                <Input variant="filled" size="2xl" placeholder="nowy PIN" keyboardType = 'number-pad' value={getNewPin} onChangeText={text => {
+                                    let cleanedText = text.replace(/[^0-9]/g, '');
+                                    if(cleanedText.length > 4) return;
+                                    setNewPin(cleanedText);}}/>
                                 <TouchableOpacity onPress={() => { changePin() }} style={styles.button} >
                                   <Text style={styles.buttonText}>Zapisz</Text>
                                 </TouchableOpacity>

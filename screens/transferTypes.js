@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 export default function TransferTypes({ navigation }){
   const [data,setData] = useState('{"name": "", "accountNumber": ""}');
+  const [myParam,setMyParam] = useState("notbot") ;
     return (
             
             <View style={styles.container}>
@@ -16,7 +17,7 @@ export default function TransferTypes({ navigation }){
                       style={styles.image}>
                     <View style={styles.backElement}>
                     
-                        <Text style={styles.header}>Przelew</Text>
+                        <Text style={styles.header}>Wybór typu przelewu</Text>
                         <View style={styles.content}>
                             
                                 
@@ -32,7 +33,7 @@ export default function TransferTypes({ navigation }){
                                         <Text style={styles.buttonText}>Wykonaj przelew</Text>
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity onPress={() =>navigation.navigate("BlikForm")}>
+                                    <TouchableOpacity onPress={() =>navigation.navigate("BlikForm",{myParam})}>
                                         <View style={styles.button}>
                                             <Image
                                                 source={require('../assets/blik.png')}

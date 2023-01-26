@@ -49,7 +49,7 @@ function accountElement(name, money,number){
         <Text style={styles.accountText}>{name}</Text>
         <Text style={styles.accountNumber}>{number}
         <TouchableOpacity style={styles.copyToClipboard} onPress={() =>handleCopy()}>
-                            <Image
+                            <Image style={styles.copyToClipboard}
                                 source={require('../assets/copy.png')}>
                             </Image>
                           </TouchableOpacity>

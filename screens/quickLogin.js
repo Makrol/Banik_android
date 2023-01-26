@@ -55,15 +55,12 @@ export default function QuickLogin({ navigation }){
                       </Center>
                       
                       <View style={styles.backElement}>
-                        <Stack space={4} w="75%" maxW="300px" mx="auto" style={styles.vstack}>
+                        <Stack space={4} w="75%" maxW="400px" mx="auto" style={styles.vstack}>
                             <Text style={styles.header}>Szybkie logowanie</Text>
                             
                             
                             <Center>
-                                <Image
-                                    source={require('../assets/fingerprint.png')}
-                                    style={styles.fingerLogo}>
-                                </Image>
+                                
                               <TouchableOpacity onPress={()=>fingerPrintLogin()}  style={styles.buttonOrange}  > 
                                   <Text style={buttonStyle.buttonOrangeText}>Skanuj Odcisk</Text>
                               </TouchableOpacity> 
@@ -126,7 +123,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 38,
     borderTopRightRadius:38,
     position: "absolute",
-    bottom: 0
+    bottom: 0,    
+
   },
   vstack:{
     width:"100%",
@@ -139,6 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     padding: "5%",
     marginTop: 0,
+    alignSelf: "center",
   }
 
 });

@@ -1,5 +1,5 @@
 
-import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Alert} from 'react-native';
+import { ImageBackground,StyleSheet,View,Text,TouchableOpacity,Alert, InteractionManager} from 'react-native';
 import {NativeBaseProvider,HStack,VStack, ScrollView,Input,Center,Button,Icon} from "native-base";
 import { Ionicons } from "@expo/vector-icons";
 import {useState,useEffect} from 'react';
@@ -14,14 +14,13 @@ import{onAuthStateChanged} from "firebase/auth";
 
 export default function TransferForm({route,navigation }){
 
- 
-
-  //const test = JSON.parse(JSON.stringify(route.params.jsonOut));
   const jsonData = JSON.parse(route.params.data);
-  console.log(jsonData);
 
   const [userData,setUserData] = useState(-1);
+  const [userEmail,setUserEmail] = useState("");
   const [accountList,setAccountList] = useState([]);
+  const [userLimit, setUserLimit] = useState(0);
+  let sum = 0;
   class User{
     constructor(accountNumber,name,pin,surname){
       this.accountNumber = accountNumber;
@@ -48,15 +47,14 @@ export default function TransferForm({route,navigation }){
     }
   }
   onAuthStateChanged(auth, (user) => {
-
-
-    //console.log(data.accountNumber);
     if (user) 
     {
-      const docRef = doc(db,"users",user.email).withConverter(userConverter);
+      const docRef = doc(db,"users",user.email);
       getDoc(docRef).then(docSnap=>{
       if (docSnap.exists()) {
           setUserData(docSnap.data().accountNumber);  
+          setUserEmail(user.email);
+          setUserLimit(docSnap.data().transferLimit);
       }
       });  
     } 
@@ -79,76 +77,122 @@ export default function TransferForm({route,navigation }){
           
   },[userData])
 
+  const[transferSum,setTransferSum] = useState(0);
+  function dataBaseTransfer(){
+      getDoc(doc(db, "accounts",accountNumber)).then(response=>{
+        if(response.data().money>transferAmount)
+        {
+          if((sum+Number(transferAmount))>userLimit)
+          {
+            Alert.alert(
+              'Przelew',
+              'Transakcja nieudana! Przekroczono limit',
+              [
+                {
+                  text: 'Ok',
+                },
+              ],
+            );
+            return;
+          }
+          getDoc(doc(db, "accounts",recipentAccountNumber)).then(recipentResponse=>{
+            if(recipentResponse.exists())
+            {
+              updateDoc(doc(db, "accounts", accountNumber),{
+                money: response.data().money-transferAmount,
+              })
+              updateDoc(doc(db, "accounts", recipentAccountNumber),{
+                money: parseInt(recipentResponse.data().money)+parseInt(transferAmount),
+              })
+                console.log(userEmail);
+                getDoc(doc(db,"users",userEmail)).then(docSnap=>{
+                if (docSnap.exists()) {
+                    const docRef = addDoc(collection(db, "transfers"), {
+                      amount: Number(transferAmount),
+                      fromAccount: accountNumber,
+                      toAccount: recipentAccountNumber,
+                      toName: recipentName,
+                      operationDate: new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }),                       
+                      postingDate: new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }),
+                      type: "Przelew Krajowy",
+                      title: transferTitle,
+                      fromName: docSnap.data().name + " "+ docSnap.data().surname
+                    });
+
+                }
+                });  
+               
+              
+
+              
+              navigation.popToTop();
+              navigation.replace('DrawerRoot');
+            }
+            else{
+              Alert.alert(
+                'Przelew',
+                'Numer konta odbiorcy nie istnieje',
+                [
+                  {
+                    text: 'Ok',
+                  },
+                ],
+              );
+            }
+           
+
+          })
+          
+          
+          
+
+          
+        }
+        else{
+          Alert.alert(
+            'Przelew',
+            'Za mało pieniędzy aby zrealizować przelew',
+            [
+              {
+                text: 'Ok',
+              },
+            ],
+          );
+        }
+      })
+  }
   function doTransfer(){
 
-                getDoc(doc(db, "accounts",accountNumber)).then(response=>{
-                  if(response.data().money>transferAmount)
-                  {
-                    
-                    
-                    //console.log("Document written with ID: ", docRef.id);
-                    
-                    updateDoc(doc(db, "accounts", accountNumber),{
-                      money: response.data().money-transferAmount,
-                    })
-                    console.log(accountNumber);
-                    getDoc(doc(db, "accounts",recipentAccountNumber)).then(recipentResponse=>{
-                      if(recipentResponse.exists())
-                      {
-                        updateDoc(doc(db, "accounts", recipentAccountNumber),{
-                          money: parseInt(recipentResponse.data().money)+parseInt(transferAmount),
-                        })
-                        const docRef = addDoc(collection(db, "transfers"), {
-                          amount: transferAmount,
-                          fromAccount: accountNumber,
-                          toAccount: recipentAccountNumber,
-                          toName: recipentName,
-                          operationDate: new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }),                       
-                          postingDate: new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }),
-                          type: "Przelew Krajowy",
-                          title: transferTitle
-                        });
-                        navigation.popToTop();
-                        navigation.replace('DrawerRoot');
-                      }
-                      else{
-                        Alert.alert(
-                          'Przelew',
-                          'Numer konta odbiorcy nie istnieje',
-                          [
-                            {
-                              text: 'Ok',
-                            },
-                          ],
-                        );
-                      }
-                     
-
-                    })
-                    
-                    
-                    
-
-                    
-                  }
-                  else{
-                    Alert.alert(
-                      'Przelew',
-                      'Za mało pieniędzy aby zrealizować przelew',
-                      [
-                        {
-                          text: 'Ok',
-                        },
-                      ],
-                    );
-                  }
-                })
 
 
-
+    if(accountNumber==""||recipentName==""|| recipentName==""|| recipentAccountNumber==""|| transferAmount==""|| transferTitle=="")
+    {
+      Alert.alert(
+        'Przelew',
+        'Nie wszystkie pola zostały wypełnione',
+        [
+          {
+            text: 'Ok',
+          },
+        ],
+      );
+      return;
+    }
+    
+    setTransferSum(0);
+    const q = query(collection(db,"transfers"),where("fromAccount","==",accountNumber));
+    getDocs(q).then(querySnapshot=>{
+        querySnapshot.forEach((doc) => {
+          if(doc.data().operationDate==new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })){
+              sum += doc.data().amount;
+            }
+        });
+        setTransferSum(sum);
+        dataBaseTransfer();
+    });
   }
  
-//const[email,setEmail] = useState(" ");
+
 const[isDisabled,setIsDisabled] = useState("true");
 const[accountNumber,setAccountNumber] = useState("");
 const[recipentName,setRecipentName] = useState(jsonData.name);
@@ -156,7 +200,6 @@ const[recipentAccountNumber,setRecipentAccountNumber] = useState(jsonData.accoun
 const[transferAmount,setTransferAmount] = useState("");
 const[transferTitle,setTransferTitle] = useState("");
 
-//<Input variant="filled" placeholder="login" value={email} onChangeText={text=>setEmail(text)}/>
 
     return (
             
